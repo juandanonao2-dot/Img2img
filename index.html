@@ -1,1 +1,75 @@
-<!doctype html><title>Img2Img</title><h1>Hello Img2Img</h1>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Img2Img – Conversor de Imagem para Prompt</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Segoe UI,Tahoma,sans-serif}
+    body{background:#111;color:#eee;display:flex;flex-direction:column;align-items:center;padding:2rem}
+    h1{margin-bottom:1rem}
+    #dropArea{width:100%;max-width:600px;height:220px;border:2px dashed #0af;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
+    #dropArea.dragover{background:#0af1}
+    #imgPreview{max-width:100%;max-height:300px;margin-top:1rem;border-radius:6px}
+    textarea{width:100%;max-width:600px;height:140px;margin-top:1rem;padding:.6rem;border-radius:6px;border:none;resize:vertical;font-size:1rem}
+    button{margin-top:1rem;padding:.6rem 1.2rem;border:none;border-radius:6px;background:#0af;color:#000;font-size:1rem;cursor:pointer}
+    button:hover{filter:brightness(1.2)}
+  </style>
+</head>
+<body>
+  <h1>Img2Img – Arraste ou clique para enviar imagem</h1>
+  <input type="file" id="fileInput" accept="image/*" hidden>
+  <div id="dropArea">Clique ou arraste a imagem aqui</div>
+  <img id="imgPreview" style="display:none">
+  <textarea id="promptOut" placeholder="Prompt gerado aparecerá aqui…"></textarea>
+  <button id="copyBtn">Copiar Prompt</button>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropArea  = document.getElementById('dropArea');
+    const preview   = document.getElementById('imgPreview');
+    const promptOut = document.getElementById('promptOut');
+    const copyBtn   = document.getElementById('copyBtn');
+
+    // Abre seletor ao clicar
+    dropArea.onclick = () => fileInput.click();
+
+    // Drag & Drop
+    ['dragenter','dragover','dragleave','drop'].forEach(evt=>{
+      dropArea.addEventListener(evt, e=>{e.preventDefault();e.stopPropagation();},false);
+    });
+    ['dragenter','dragover'].forEach(evt=>{
+      dropArea.addEventListener(evt,()=>dropArea.classList.add('dragover'),false);
+    });
+    ['dragleave','drop'].forEach(evt=>{
+      dropArea.addEventListener(evt,()=>dropArea.classList.remove('dragover'),false);
+    });
+    dropArea.addEventListener('drop', e=>{
+      const f = e.dataTransfer.files[0];
+      if(f && f.type.startsWith('image')) handleFile(f);
+    });
+
+    fileInput.addEventListener('change', e=>{
+      if(e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file){
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        preview.src = ev.target.result;
+        preview.style.display='block';
+        // Gera "prompt" simples: descreve dimensões e tipo
+        promptOut.value = `Imagem ${file.type.split('/')[1].toUpperCase()} ${file.width||'?'}×${file.height||'?'} gerada via img2img, cores vibrantes, detalhes nítidos, iluminação equilibrada --v 5 --ar ${file.width||1}:${file.height||1}`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    copyBtn.onclick = ()=>{
+      promptOut.select();
+      document.execCommand('copy');
+      copyBtn.textContent='Copiado!';
+      setTimeout(()=>copyBtn.textContent='Copiar Prompt',1200);
+    };
+  </script>
+</body>
+</html>
+
